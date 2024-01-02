@@ -3,6 +3,7 @@ from pyshadow.main import Shadow
 import time
 import pandas as pd
 from selenium.common.exceptions import ElementNotVisibleException
+from selenium.common.exceptions import ElementClickInterceptedException
 import json
 import os
 
@@ -81,22 +82,27 @@ class omni:
         with open(self.quarter_file_path, "r") as json_file:
             json_data = json.load(json_file)
         quarter_value = json_data["quarter"]
-
-        failed_search = []
         search_bar_parent1 = self.shadow.find_element("view-criteria-builder")
-        # no_result_div_parent = self.shadow.find_element(search_bar_parent1, "cb-mega-menu")
 
         search_bar_parent2 = self.shadow.find_element(search_bar_parent1, "cb-search-bar[type='megaMenu']")
 
-        # quarter_dropdown = self.shadow.find_element(search_bar_parent1, ".time-period-dropdown")
-        # quarter_dropdown.click()
-        # quarter_search = self.shadow.find_element(quarter_dropdown, "#search")
-
         data = pd.read_csv("AE_data.csv")
         search_data_column = 'search_phrase'
+        search_phrases = data['search_phrase'].tolist()
+        modified_list = [string.replace(" ", "").lower() for string in search_phrases]
         for quarter in quarter_value:
+            failed_search = []
+            time.sleep(10)
             quarter_dropdown = self.shadow.find_element(search_bar_parent1, ".time-period-dropdown")
-            quarter_dropdown.click()
+            try:
+                quarter_dropdown.click()
+            except ElementClickInterceptedException:
+                # cancel_mega_menu_parent1 = self.shadow.find_element("cb-mega-menu")
+                cancel_mega_menu = self.shadow.find_element(".button.is-text.is-small")
+                cancel_mega_menu.click()
+                quarter_dropdown.click()
+                time.sleep(7)
+
             quarter_search = self.shadow.find_element(quarter_dropdown, "#search")
             quarter_search.send_keys(quarter)
             time_period_search_result = self.shadow.find_element(quarter_dropdown, ".dropdown-option")
@@ -109,20 +115,27 @@ class omni:
                 search_bar.send_keys(search_data)
                 time.sleep(2)
                 search_button.click()
-                time.sleep(4)
+                time.sleep(7)
                 try:
                     parent1 = self.shadow.find_element("view-criteria-builder")
                     no_result_div = self.shadow.find_element(parent1, ".no-results-info")
                 except ElementNotVisibleException:
-                    failed_search.append(search_data)
+                    search_result = self.shadow.find_elements(".attribute-item span[slot='invoker']")
 
+                    for result in search_result:
+                        result_text = result.text
+                        result_text = result_text.replace(" ", "").lower()
+                        print(result_text)
+                        if result_text in modified_list:
+                            failed_search.append(search_data)
                 clear_search_icon_parent = self.shadow.find_element(search_bar_parent2, ".is-size-3.remove-search-term")
                 clear_search_icon = self.shadow.find_element(clear_search_icon_parent, "div[part='icon']")
                 clear_search_icon.click()
+                print(failed_search)
 
             if failed_search:
                 failed_df = pd.DataFrame(failed_search, columns=[search_data_column])
-                file_name = f"{quarter}_failed_searches.csv"
+                file_name = f"{quarter}_result_found_searches.csv"
                 file_path = os.path.join(self.current_directory, 'search_results', file_name)
                 failed_df.to_csv(file_path, index=False)
 
