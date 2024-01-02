@@ -3,6 +3,8 @@ from pyshadow.main import Shadow
 import time
 import pandas as pd
 from selenium.common.exceptions import ElementNotVisibleException
+import json
+import os
 
 
 
@@ -12,9 +14,12 @@ class omni:
         self.shadow = Shadow(self.driver)
         self.id = email
         self.password = pswd
+        self.current_directory = os.path.dirname(os.path.abspath(__file__))
+        self.quarter_file_path = os.path.join(self.current_directory, 'data', 'quarter.json')
 
     def test_login(self):
         self.driver.get("https://devomni.annalect.com/login")
+        self.driver.maximize_window()
         username = self.shadow.find_element("#username")
         signup_btn = self.shadow.find_element("#eid-login-btn")
         password = self.shadow.find_element("#password")
@@ -72,35 +77,54 @@ class omni:
         time.sleep(10)
 
     def test_build_your_audience(self):
+
+        with open(self.quarter_file_path, "r") as json_file:
+            json_data = json.load(json_file)
+        quarter_value = json_data["quarter"]
+
         failed_search = []
         search_bar_parent1 = self.shadow.find_element("view-criteria-builder")
         # no_result_div_parent = self.shadow.find_element(search_bar_parent1, "cb-mega-menu")
 
         search_bar_parent2 = self.shadow.find_element(search_bar_parent1, "cb-search-bar[type='megaMenu']")
-        search_bar = self.shadow.find_element(search_bar_parent2, "#criteria-builder-toolbar-search-input")
-        search_button = self.shadow.find_element(search_bar_parent2, ".button.is-small.is-primary.dynamic-search-button")
+
+        # quarter_dropdown = self.shadow.find_element(search_bar_parent1, ".time-period-dropdown")
+        # quarter_dropdown.click()
+        # quarter_search = self.shadow.find_element(quarter_dropdown, "#search")
 
         data = pd.read_csv("AE_data.csv")
         search_data_column = 'search_phrase'
-        for index, row in data.iterrows():
-            search_data = row[search_data_column]
-            search_bar.send_keys(search_data)
-            time.sleep(2)
-            search_button.click()
-            time.sleep(4)
-            try:
-                parent1 = self.shadow.find_element("view-criteria-builder")
-                no_result_div = self.shadow.find_element(parent1, ".no-results-info")
-            except ElementNotVisibleException:
-                failed_search.append(search_data)
+        for quarter in quarter_value:
+            quarter_dropdown = self.shadow.find_element(search_bar_parent1, ".time-period-dropdown")
+            quarter_dropdown.click()
+            quarter_search = self.shadow.find_element(quarter_dropdown, "#search")
+            quarter_search.send_keys(quarter)
+            time_period_search_result = self.shadow.find_element(quarter_dropdown, ".dropdown-option")
+            time_period_search_result.click()
+            time.sleep(10)
+            for index, row in data.iterrows():
+                search_bar = self.shadow.find_element(search_bar_parent2, "#criteria-builder-toolbar-search-input")
+                search_button = self.shadow.find_element(search_bar_parent2, ".button.is-small.is-primary.dynamic-search-button")
+                search_data = row[search_data_column]
+                search_bar.send_keys(search_data)
+                time.sleep(2)
+                search_button.click()
+                time.sleep(4)
+                try:
+                    parent1 = self.shadow.find_element("view-criteria-builder")
+                    no_result_div = self.shadow.find_element(parent1, ".no-results-info")
+                except ElementNotVisibleException:
+                    failed_search.append(search_data)
 
-            clear_search_icon_parent = self.shadow.find_element(search_bar_parent2, ".is-size-3.remove-search-term")
-            clear_search_icon = self.shadow.find_element(clear_search_icon_parent, "div[part='icon']")
-            clear_search_icon.click()
+                clear_search_icon_parent = self.shadow.find_element(search_bar_parent2, ".is-size-3.remove-search-term")
+                clear_search_icon = self.shadow.find_element(clear_search_icon_parent, "div[part='icon']")
+                clear_search_icon.click()
 
-        if failed_search:
-            failed_df = pd.DataFrame(failed_search, columns=[search_data_column])
-            failed_df.to_csv('failed_searches.csv', index=False)
+            if failed_search:
+                failed_df = pd.DataFrame(failed_search, columns=[search_data_column])
+                file_name = f"{quarter}_failed_searches.csv"
+                file_path = os.path.join(self.current_directory, 'search_results', file_name)
+                failed_df.to_csv(file_path, index=False)
 
         self.driver.quit()
 
@@ -108,9 +132,12 @@ class omni:
 
 
 
+
+
+
 obj = omni("adminqa.user@annalect.com", "e-A)7+T8IW3z1[")
 obj.test_login()
-# obj.test_change_client()
+obj.test_change_client()
 obj.test_ae()
 obj.test_explore_audience()
 obj.test_build_your_audience()
