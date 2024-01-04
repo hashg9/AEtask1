@@ -19,19 +19,21 @@ class omni:
         self.quarter_file_path = os.path.join(self.current_directory, 'data', 'quarter.json')
 
     def test_login(self):
-        self.driver.get("https://devomni.annalect.com/login")
+        self.driver.get("https://qaomni.annalect.com/login")
         self.driver.maximize_window()
         username = self.shadow.find_element("#username")
         signup_btn = self.shadow.find_element("#eid-login-btn")
         password = self.shadow.find_element("#password")
         username.send_keys(self.id)
         signup_btn.click()
-        time.sleep(2)
+        time.sleep(5)
         password.send_keys(self.password)
         signup_btn.click()
-        time.sleep(20)
+        time.sleep(60)
+
 
     def test_change_client(self):
+
         parent_all_tools = self.shadow.find_element("portal-app-container")
         parent1_client = self.shadow.find_element(parent_all_tools, "portal-client-selection-menu")
         parent2_client = self.shadow.find_element(parent1_client, "portal-client-button[aria-haspopup='listbox']")
@@ -45,14 +47,16 @@ class omni:
         time.sleep(15)
 
     def test_ae(self):
+        time.sleep(10)
         parent_all_tools = self.shadow.find_element("portal-app-container")
-        parent1_all_tools = self.shadow.find_element(parent_all_tools, "omni-nav-menu")
-        all_tools = self.shadow.find_element(parent1_all_tools, " omni-style:nth-child(1) > nav:nth-child(1) > div:nth-child(2) > ul:nth-child(1) > div:nth-child(1) > portal-all-tools:nth-child(1) > li:nth-child(1) > omni-tooltip:nth-child(1) > div:nth-child(1) > a:nth-child(1) > omni-icon:nth-child(1)")
+        parent1_all_tools = self.shadow.find_element(parent_all_tools, "portal-nav-menu")
+        parent2_all_tools = self.shadow.find_element(parent1_all_tools, "omni-nav-menu")
+        all_tools = self.shadow.find_element(parent2_all_tools, "omni-style:nth-child(1) > nav:nth-child(1) > div:nth-child(2) > ul:nth-child(1) > div:nth-child(1) > portal-all-tools:nth-child(1) > li:nth-child(1) > omni-tooltip:nth-child(1) > div:nth-child(1) > a:nth-child(1) > omni-icon:nth-child(1)")
         all_tools.click()
         parent_ae = self.shadow.find_element(parent_all_tools, "portal-nav-menu")
         parent1_ae = self.shadow.find_element(parent_ae, "omni-nav-menu")
         parent2_ae = self.shadow.find_element(parent1_ae, "portal-all-tools")
-        audience_explorer = self.shadow.find_element(parent2_ae, " omni-style:nth-child(1) > div:nth-child(1) > div:nth-child(2) > div:nth-child(1) > div:nth-child(1) > div:nth-child(1) > a:nth-child(7) > p:nth-child(2)")
+        audience_explorer = self.shadow.find_element(parent2_ae, "a[title='Audience Explorer (Omni)']")
         audience_explorer.click()
         time.sleep(15)
 
@@ -72,10 +76,10 @@ class omni:
         project_dropdown = self.shadow.find_element(project_dropdown_parent, ".button.dropdown__button")
         project_dropdown.click()
         project_dropdown_search = self.shadow.find_element(project_dropdown_parent, "#search")
-        project_dropdown_search.send_keys("NA_US -")
-        project_dropdown_search_result = self.shadow.find_element(project_dropdown_parent, "#id-4491fd44-9e5e-11ee-9ca6-0a58a9feac02-0-text")
+        project_dropdown_search.send_keys("NA_US")
+        project_dropdown_search_result = self.shadow.find_element(project_dropdown_parent, " omni-style:nth-child(1) > div:nth-child(1) > div:nth-child(1) > div:nth-child(1) > div:nth-child(2) > div:nth-child(1) > div:nth-child(2) > div:nth-child(1)")
         project_dropdown_search_result.click()
-        time.sleep(10)
+        time.sleep(20)
 
     def test_build_your_audience(self):
 
@@ -92,7 +96,7 @@ class omni:
         modified_list = [string.replace(" ", "").lower() for string in search_phrases]
         for quarter in quarter_value:
             failed_search = []
-            time.sleep(10)
+
             quarter_dropdown = self.shadow.find_element(search_bar_parent1, ".time-period-dropdown")
             try:
                 quarter_dropdown.click()
@@ -101,19 +105,18 @@ class omni:
                 cancel_mega_menu = self.shadow.find_element(".button.is-text.is-small")
                 cancel_mega_menu.click()
                 quarter_dropdown.click()
-                time.sleep(7)
+                time.sleep(20)
 
             quarter_search = self.shadow.find_element(quarter_dropdown, "#search")
             quarter_search.send_keys(quarter)
             time_period_search_result = self.shadow.find_element(quarter_dropdown, ".dropdown-option")
             time_period_search_result.click()
-            time.sleep(10)
+            time.sleep(40)
             for index, row in data.iterrows():
                 search_bar = self.shadow.find_element(search_bar_parent2, "#criteria-builder-toolbar-search-input")
                 search_button = self.shadow.find_element(search_bar_parent2, ".button.is-small.is-primary.dynamic-search-button")
                 search_data = row[search_data_column]
                 search_bar.send_keys(search_data)
-                time.sleep(2)
                 search_button.click()
                 time.sleep(7)
                 try:
@@ -121,17 +124,16 @@ class omni:
                     no_result_div = self.shadow.find_element(parent1, ".no-results-info")
                 except ElementNotVisibleException:
                     search_result = self.shadow.find_elements(".attribute-item span[slot='invoker']")
-
                     for result in search_result:
                         result_text = result.text
                         result_text = result_text.replace(" ", "").lower()
-                        print(result_text)
                         if result_text in modified_list:
                             failed_search.append(search_data)
+                            break
+
                 clear_search_icon_parent = self.shadow.find_element(search_bar_parent2, ".is-size-3.remove-search-term")
                 clear_search_icon = self.shadow.find_element(clear_search_icon_parent, "div[part='icon']")
                 clear_search_icon.click()
-                print(failed_search)
 
             if failed_search:
                 failed_df = pd.DataFrame(failed_search, columns=[search_data_column])
@@ -148,9 +150,9 @@ class omni:
 
 
 
-obj = omni("adminqa.user@annalect.com", "e-A)7+T8IW3z1[")
+obj = omni("adminqa.user@annalect.com", "]1uMo%1R35i0kS")
 obj.test_login()
-obj.test_change_client()
+# obj.test_change_client()
 obj.test_ae()
 obj.test_explore_audience()
 obj.test_build_your_audience()
