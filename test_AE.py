@@ -34,7 +34,7 @@ class omni:
         time.sleep(10)
         password.send_keys(self.password)
         signup_btn.click()
-        time.sleep(120)
+        time.sleep(40)
 
 
 
@@ -111,11 +111,6 @@ class omni:
                 time.sleep(5)
                 dropdown_item = self.shadow.find_element(view_project_dropdown, "#dropdown-menu > div > div.dropdown-list > div:nth-child(1)")
                 dropdown_item.click()
-                time.sleep(30)
-                create_new_aud_btn.click()
-                time.sleep(1)
-                project_dropdown_search.send_keys(filename)
-
 
             time.sleep(30)
 
@@ -160,10 +155,11 @@ class omni:
                         search_result = self.shadow.find_elements(".attribute-item span[slot='invoker']")
                         for result in search_result:
                             result_text = result.text
+                            actual_text = result_text
                             result_text = result_text.replace(" ", "").lower()
                             if result_text in modified_list:
-                                failed_search.append(search_data)
-                                break
+                                failed_search.append(actual_text)
+
 
                     clear_search_icon_parent = self.shadow.find_element(search_bar_parent2,
                                                                         ".is-size-3.remove-search-term")
@@ -171,6 +167,8 @@ class omni:
                     clear_search_icon.click()
 
                 if failed_search:
+                    # Remove duplicates from the failed_search list
+                    failed_search = list(set(failed_search))
                     file_name = f"{quarter}_found_searches.csv"
                     file_path = os.path.join(self.current_directory, 'search_results', file_name)
                     new_column_name = filename
