@@ -24,7 +24,7 @@ class omni:
         self.quarter_file_path = os.path.join(self.current_directory, 'data', 'quarter.json')
 
     def test_login(self):
-        self.driver.get("https://qaomni.annalect.com/login")
+        self.driver.get("https://omni.annalect.com/login")
         self.driver.maximize_window()
         username = self.shadow.find_element("#username")
         signup_btn = self.shadow.find_element("#eid-login-btn")
@@ -105,10 +105,10 @@ class omni:
                 view = self.shadow.find_element("view-criteria-builder")
                 view_project_dropdown = self.shadow.find_element(view, " omni-style:nth-child(1) > omni-tile:nth-child(1) > header:nth-child(1) > section:nth-child(2) > div:nth-child(1) > div:nth-child(1) > div:nth-child(2) > ae-dropdown:nth-child(2)")
                 view_project_dropdown.click()
-                time.sleep(5)
+                time.sleep(7)
                 dropdown_search = self.shadow.find_element(view_project_dropdown, "#search")
                 dropdown_search.send_keys(filename)
-                time.sleep(5)
+                time.sleep(7)
                 dropdown_item = self.shadow.find_element(view_project_dropdown, "#dropdown-menu > div > div.dropdown-list > div:nth-child(1)")
                 dropdown_item.click()
 
@@ -128,7 +128,7 @@ class omni:
                 quarter_dropdown = self.shadow.find_element(search_bar_parent1, ".time-period-dropdown")
                 try:
                     quarter_dropdown.click()
-                except ElementClickInterceptedException:
+                except ElementClickInterceptedException :
                     # cancel_mega_menu_parent1 = self.shadow.find_element("cb-mega-menu")
                     cancel_mega_menu = self.shadow.find_element(".button.is-text.is-small")
                     cancel_mega_menu.click()
@@ -199,7 +199,7 @@ class omni:
 
 
 
-obj = omni("adminqa.user@annalect.com", "]1uMo%1R35i0kS")
+obj = omni("adminqa.user@annalect.com", "84_A*ceP@e]p>R")
 obj.test_login()
 # obj.test_change_client()
 obj.test_ae()
